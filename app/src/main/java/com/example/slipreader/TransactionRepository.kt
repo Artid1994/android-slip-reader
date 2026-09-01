@@ -9,11 +9,27 @@ class TransactionRepository(context: Context) {
     private val prefs = context.getSharedPreferences("slip_history_prefs", Context.MODE_PRIVATE)
     private val gson = Gson()
 
-    // บันทึกรายการใหม่
-    fun saveTransaction(record: TransactionRecord) {
+    // บันทึกรายการใหม่ (คืนค่า true ถ้าบันทึกสำเร็จ, false ถ้าเป็นสลิปซ้ำ)
+    fun saveTransaction(record: TransactionRecord): Boolean {
         val currentList = getAllTransactions().toMutableList()
+
+        // ตรวจสอบว่าสลิปนี้เคยถูกบันทึกไปแล้วหรือยัง (เช็ก วันที่ + เวลา + ยอดเงิน)
+        if (isDuplicate(record, currentList)) {
+            return false // เป็นสลิปซ้ำ ไม่บันทึกเพิ่ม
+        }
+
         currentList.add(0, record) // เพิ่มรายการล่าสุดไว้บนสุด
         saveList(currentList)
+        return true
+    }
+
+    // ฟังก์ชันเช็กว่ามีรายการสลิปที่ ยอดเงิน, วันที่ และเวลา ตรงกันอยู่แล้วหรือไม่
+    private fun isDuplicate(newRecord: TransactionRecord, existingList: List<TransactionRecord>): Boolean {
+        return existingList.any { existing ->
+            existing.amount == newRecord.amount &&
+            existing.dateStr == newRecord.dateStr &&
+            existing.timeStr == newRecord.timeStr
+        }
     }
 
     // ดึงรายการทั้งหมด จัดลำดับตาม Timestamp (ล่าสุดขึ้นก่อน)
@@ -24,7 +40,7 @@ class TransactionRepository(context: Context) {
         return list.sortedByDescending { it.timestamp }
     }
 
-    // คำนวณสรุปยอดประจำวัน (รายรับรวม, รายจ่ายรวม, ยอดคงเหลือ)
+    // คำนวณสรุปยอดประจำวัน
     fun getDailySummary(dateStr: String): DailySummary {
         val dailyList = getAllTransactions().filter { it.dateStr == dateStr }
         val totalIncome = dailyList.filter { it.type == TransactionType.INCOME }.sumOf { it.amount }

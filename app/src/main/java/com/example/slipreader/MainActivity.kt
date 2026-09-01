@@ -70,9 +70,13 @@ class MainActivity : AppCompatActivity() {
                 .addOnSuccessListener { visionText ->
                     val record = SlipParser.parse(visionText.text)
                     if (record != null) {
-                        repository.saveTransaction(record)
-                        Toast.makeText(this, "บันทึกสลิปสำเร็จ", Toast.LENGTH_SHORT).show()
-                        updateUI()
+                        val isSaved = repository.saveTransaction(record)
+                        if (isSaved) {
+                            Toast.makeText(this, "บันทึกสลิปสำเร็จ", Toast.LENGTH_SHORT).show()
+                            updateUI()
+                        } else {
+                            Toast.makeText(this, "⚠️ สลิปนี้เคยบันทึกไปแล้ว", Toast.LENGTH_LONG).show()
+                        }
                     } else {
                         Toast.makeText(this, "ไม่สามารถแกะยอดเงินได้", Toast.LENGTH_SHORT).show()
                     }
