@@ -21,6 +21,7 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import com.google.android.material.chip.ChipGroup
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
@@ -60,15 +61,12 @@ class MainActivity : AppCompatActivity() {
         uri?.let {
             contentResolver.takePersistableUriPermission(
                 it,
-                Intent.FLAG_GRANT_READ_URI_PERMISSION
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
             )
             repository.saveAutoFolderUri(it.toString())
             tvFolderPath.text = "แฟ้ม: ${it.path}"
             
-            // 1. สั่งสแกนทันที 1 รอบหลังเลือกโฟลเดอร์เสร็จ
             runImmediateScanWork()
-            
-            // 2. ตั้งเวลารอบสแกนถัดไปตามปกติ
             scheduleAutoScanWork()
             
             Toast.makeText(this, "เริ่มสแกนสลิปในแฟ้มทันที...", Toast.LENGTH_SHORT).show()
@@ -145,10 +143,20 @@ class MainActivity : AppCompatActivity() {
         updateUI()
     }
 
-    // ฟังก์ชันสั่งสแกนโฟลเดอร์ทันที
+    // สั่งสแกนทันทีและเฝ้าสังเกตการณ์ (Observe) เพื่ออัปเดตหน้าจอเมื่อสแกนเสร็จ
     private fun runImmediateScanWork() {
         val immediateWorkRequest = OneTimeWorkRequestBuilder<SlipAutoScanWorker>().build()
-        WorkManager.getInstance(applicationContext).enqueue(immediateWorkRequest)
+        val workManager = WorkManager.getInstance(applicationContext)
+        
+        workManager.enqueue(immediateWorkRequest)
+        
+        workManager.getWorkInfoByIdLiveData(immediateWorkRequest.id)
+            .observe(this) { workInfo ->
+                if (workInfo != null && workInfo.state == WorkInfo.State.SUCCEEDED) {
+                    updateUI()
+                    Toast.makeText(this, "สแกนสลิปในแฟ้มเรียบร้อยแล้ว", Toast.LENGTH_SHORT).show()
+                }
+            }
     }
 
     private fun scheduleAutoScanWork() {

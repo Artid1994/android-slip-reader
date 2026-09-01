@@ -5,10 +5,10 @@ import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
 import androidx.work.Worker
 import androidx.work.WorkerParameters
+import com.google.android.gms.tasks.Tasks
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
-import com.google.android.gms.tasks.Tasks
 
 class SlipAutoScanWorker(context: Context, params: WorkerParameters) : Worker(context, params) {
 
@@ -23,7 +23,7 @@ class SlipAutoScanWorker(context: Context, params: WorkerParameters) : Worker(co
         val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
 
         for (file in files) {
-            if (file.isFile && (file.type?.startsWith("image/") == true || file.name?.endsWith(".jpg") == true || file.name?.endsWith(".png") == true)) {
+            if (file.isFile && (file.type?.startsWith("image/") == true || file.name?.endsWith(".jpg", ignoreCase = true) == true || file.name?.endsWith(".png", ignoreCase = true) == true)) {
                 try {
                     val image = InputImage.fromFilePath(applicationContext, file.uri)
                     val result = Tasks.await(recognizer.process(image))
