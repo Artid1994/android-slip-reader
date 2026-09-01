@@ -16,7 +16,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvResult: TextView
     private lateinit var btnSelectImage: Button
 
-    // Launcher สำหรับเปิด Gallery เลือกรูปภาพ
     private val pickImageLauncher = registerForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -26,7 +25,6 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // สร้าง UI แบบ Simple โปรแกรมมิ่งโดยไม่ต้องใช้ XML Layout
         val layout = android.widget.LinearLayout(this).apply {
             orientation = android.widget.LinearLayout.VERTICAL
             setPadding(32, 32, 32, 32)
@@ -48,7 +46,6 @@ class MainActivity : AppCompatActivity() {
         setContentView(layout)
     }
 
-    // ฟังก์ชันประมวลผลข้อความจากสลิปด้วย ML Kit ภาษาไทย
     private fun processSlipImage(imageUri: Uri) {
         try {
             val image = InputImage.fromFilePath(this, imageUri)
@@ -58,8 +55,6 @@ class MainActivity : AppCompatActivity() {
                 .addOnSuccessListener { visionText ->
                     val rawText = visionText.text
                     tvResult.text = "ข้อความที่พบในสลิป:\n\n$rawText"
-                    
-                    // TODO: ส่งข้อความไปผ่าน Regex เพื่อดึง ยอดเงิน วันที่ และประเภทธุรกรรม
                 }
                 .addOnFailureListener { e ->
                     Toast.makeText(this, "อ่านสลิปไม่สำเร็จ: ${e.message}", Toast.LENGTH_SHORT).show()
