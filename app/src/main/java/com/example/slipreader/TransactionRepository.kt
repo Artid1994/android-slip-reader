@@ -9,18 +9,16 @@ class TransactionRepository(context: Context) {
     private val prefs = context.getSharedPreferences("slip_history_prefs", Context.MODE_PRIVATE)
     private val gson = Gson()
 
-    // บันทึกรายการใหม่
     fun saveTransaction(record: TransactionRecord): Boolean {
         val currentList = getAllTransactions().toMutableList()
         if (currentList.any { it.id == record.id }) {
-            return false // รายการซ้ำ
+            return false
         }
         currentList.add(0, record)
         saveList(currentList)
         return true
     }
 
-    // ดึงรายการทั้งหมด
     fun getAllTransactions(): List<TransactionRecord> {
         val json = prefs.getString("transactions_key", null) ?: return emptyList()
         val type = object : TypeToken<List<TransactionRecord>>() {}.type
@@ -28,7 +26,6 @@ class TransactionRepository(context: Context) {
         return list.sortedByDescending { it.timestamp }
     }
 
-    // จัดการงบประมาณรายเดือน (Monthly Budget)
     fun getMonthlyBudget(): Double {
         return prefs.getFloat("monthly_budget_key", 10000.0f).toDouble()
     }
@@ -37,14 +34,12 @@ class TransactionRepository(context: Context) {
         prefs.edit().putFloat("monthly_budget_key", budget.toFloat()).apply()
     }
 
-    // ลบรายการ
     fun deleteTransaction(id: String) {
         val currentList = getAllTransactions().toMutableList()
         currentList.removeAll { it.id == id }
         saveList(currentList)
     }
 
-    // แก้ไขรายการ
     fun updateTransaction(updatedRecord: TransactionRecord) {
         val currentList = getAllTransactions().toMutableList()
         val index = currentList.indexOfFirst { it.id == updatedRecord.id }
@@ -54,7 +49,6 @@ class TransactionRepository(context: Context) {
         }
     }
 
-    // จัดการ URI แฟ้มสลิปอัตโนมัติ
     fun saveAutoFolderUri(uriStr: String) {
         prefs.edit().putString("auto_folder_uri", uriStr).apply()
     }
@@ -63,7 +57,6 @@ class TransactionRepository(context: Context) {
         return prefs.getString("auto_folder_uri", null)
     }
 
-    // คำนวณสรุปยอดประจำวัน
     fun getDailySummary(dateStr: String): DailySummary {
         val dailyList = getAllTransactions().filter { it.dateStr == dateStr }
         val totalIncome = dailyList.filter { it.type == TransactionType.INCOME }.sumOf { it.amount }
