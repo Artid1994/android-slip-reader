@@ -11,8 +11,8 @@ android {
         applicationId = "com.example.slipreader"
         minSdk = 24
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.0.0-beta1a"
     }
 
     buildTypes {
@@ -44,7 +44,7 @@ dependencies {
     // Gson
     implementation("com.google.code.gson:gson:2.10.1")
 
-    // WorkManager สำหรับรันระบบสแกนสลิปอัตโนมัติตามรอบเวลา
+    // WorkManager & DocumentFile
     implementation("androidx.work:work-runtime-ktx:2.9.0")
     implementation("androidx.documentfile:documentfile:1.0.1")
 }
