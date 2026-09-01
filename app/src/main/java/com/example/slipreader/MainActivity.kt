@@ -19,6 +19,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.google.android.material.chip.ChipGroup
@@ -63,8 +64,14 @@ class MainActivity : AppCompatActivity() {
             )
             repository.saveAutoFolderUri(it.toString())
             tvFolderPath.text = "แฟ้ม: ${it.path}"
+            
+            // 1. สั่งสแกนทันที 1 รอบหลังเลือกโฟลเดอร์เสร็จ
+            runImmediateScanWork()
+            
+            // 2. ตั้งเวลารอบสแกนถัดไปตามปกติ
             scheduleAutoScanWork()
-            Toast.makeText(this, "ตั้งค่าแฟ้มตรวจสลิปเรียบร้อย", Toast.LENGTH_SHORT).show()
+            
+            Toast.makeText(this, "เริ่มสแกนสลิปในแฟ้มทันที...", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -136,6 +143,12 @@ class MainActivity : AppCompatActivity() {
         }
 
         updateUI()
+    }
+
+    // ฟังก์ชันสั่งสแกนโฟลเดอร์ทันที
+    private fun runImmediateScanWork() {
+        val immediateWorkRequest = OneTimeWorkRequestBuilder<SlipAutoScanWorker>().build()
+        WorkManager.getInstance(applicationContext).enqueue(immediateWorkRequest)
     }
 
     private fun scheduleAutoScanWork() {
