@@ -3,6 +3,7 @@ package com.example.slipreader
 import android.net.Uri
 import android.os.Bundle
 import android.widget.Button
+import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -13,8 +14,10 @@ import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var tvResult: TextView
+    private lateinit var tvSummary: TextView
+    private lateinit var tvHistory: TextView
     private lateinit var btnSelectImage: Button
+    private lateinit var repository: TransactionRepository
 
     private val pickImageLauncher = registerForActivityResult(
         ActivityResultContracts.GetContent()
@@ -24,26 +27,36 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
+        repository = TransactionRepository(this)
+
+        val scrollView = ScrollView(this)
         val layout = android.widget.LinearLayout(this).apply {
             orientation = android.widget.LinearLayout.VERTICAL
             setPadding(32, 32, 32, 32)
         }
 
         btnSelectImage = Button(this).apply {
-            text = "เลือกรูปสลิปจากเครื่อง"
+            text = "สแกนสลิปโอนเงิน"
             setOnClickListener { pickImageLauncher.launch("image/*") }
         }
 
-        tvResult = TextView(this).apply {
-            text = "ผลลัพธ์การสแกนสลิปจะแสดงที่นี่..."
+        tvSummary = TextView(this).apply {
             textSize = 16f
-            setPadding(0, 32, 0, 0)
+            setPadding(0, 24, 0, 24)
+        }
+
+        tvHistory = TextView(this).apply {
+            textSize = 14f
+            setPadding(0, 16, 0, 0)
         }
 
         layout.addView(btnSelectImage)
-        layout.addView(tvResult)
-        setContentView(layout)
+        layout.addView(tvSummary)
+        layout.addView(tvHistory)
+        scrollView.addView(layout)
+        setContentView(scrollView)
+
+        updateUI()
     }
 
     private fun processSlipImage(imageUri: Uri) {
@@ -53,24 +66,49 @@ class MainActivity : AppCompatActivity() {
 
             recognizer.process(image)
                 .addOnSuccessListener { visionText ->
-                    val rawText = visionText.text
-                    val parsedData = SlipParser.parse(rawText)
-
-                    tvResult.text = """
-                        === ข้อมูลสลิปที่แกะได้ ===
-                        💰 ยอดเงิน: ${parsedData.amount ?: "ไม่ระบุ"} บาท
-                        📅 วันที่: ${parsedData.date ?: "ไม่ระบุ"}
-                        ⏰ เวลา: ${parsedData.time ?: "ไม่ระบุ"}
-                        
-                        --- ข้อความดิบทั้งหมด ---
-                        $rawText
-                    """.trimIndent()
+                    val record = SlipParser.parse(visionText.text)
+                    if (record != null) {
+                        repository.saveTransaction(record)
+                        Toast.makeText(this, "บันทึกข้อมูลสลิปเรียบร้อย", Toast.LENGTH_SHORT).show()
+                        updateUI()
+                    } else {
+                        Toast.makeText(this, "ไม่สามารถแกะยอดเงินจากสลิปได้", Toast.LENGTH_SHORT).show()
+                    }
                 }
                 .addOnFailureListener { e ->
                     Toast.makeText(this, "อ่านสลิปไม่สำเร็จ: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
         } catch (e: Exception) {
             e.printStackTrace()
+        }
+    }
+
+    private fun updateUI() {
+        val historyList = repository.getAllTransactions()
+        
+        if (historyList.isNotEmpty()) {
+            val latestDate = historyList.first().dateStr
+            val summary = repository.getDailySummary(latestDate)
+
+            tvSummary.text = """
+                📊 === สรุปประจำวัน ($latestDate) ===
+                🟢 รายรับรวม: ${summary.totalIncome} บาท
+                🔴 รายจ่ายรวม: ${summary.totalExpense} บาท
+                💵 ยอดสุทธิ: ${summary.netBalance} บาท (${summary.itemCount} รายการ)
+            """.trimIndent()
+
+            val historyText = StringBuilder("📜 === ประวัติการโอนเงิน (ล่าสุดขึ้นก่อน) ===\n\n")
+            historyList.forEach { item ->
+                val typeSymbol = if (item.type == TransactionType.INCOME) "🟢 +" else "🔴 -"
+                historyText.append("$typeSymbol ${item.amount} บาท [${item.category}]\n")
+                historyText.append("   🏦 ${item.bankName} | ผู้รับ: ${item.receiverName}\n")
+                historyText.append("   📅 ${item.dateStr}  ⏰ ${item.timeStr}\n")
+                historyText.append("----------------------------------------\n")
+            }
+            tvHistory.text = historyText.toString()
+        } else {
+            tvSummary.text = "ยังไม่มีข้อมูลประวัติธุรกรรม"
+            tvHistory.text = ""
         }
     }
 }
