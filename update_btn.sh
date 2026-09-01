@@ -1,3 +1,295 @@
+#!/bin/bash
+
+# 1. อัปเดต app/build.gradle.kts เป็น 1.0.0-beta1j
+cat << 'EOF' > app/build.gradle.kts
+plugins {
+    id("com.android.application")
+    id("org.jetbrains.kotlin.android")
+}
+
+android {
+    namespace = "com.example.slipreader"
+    compileSdk = 34
+
+    defaultConfig {
+        applicationId = "com.example.slipreader"
+        minSdk = 24
+        targetSdk = 34
+        versionCode = 11
+        versionName = "1.0.0-beta1j"
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+}
+
+dependencies {
+    implementation("androidx.core:core-ktx:1.12.0")
+    implementation("androidx.appcompat:appcompat:1.6.1")
+    implementation("com.google.android.material:material:1.11.0")
+
+    // Google ML Kit & Gson & WorkManager
+    implementation("com.google.mlkit:text-recognition:16.0.0")
+    implementation("com.google.code.gson:gson:2.10.1")
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
+    implementation("androidx.documentfile:documentfile:1.0.1")
+
+    // MPAndroidChart
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+}
+EOF
+
+# 2. ปรับเปลี่ยน activity_main.xml เปลี่ยน Spinner เป็น ปุ่ม "อัปเดต"
+cat << 'EOF' > app/src/main/res/layout/activity_main.xml
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout 
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#121212">
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="80dp">
+
+            <!-- การ์ดสรุปยอดเงินสุทธิ -->
+            <include layout="@layout/layout_summary_card" />
+
+            <!-- การ์ด Budget Progress Bar -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginBottom="12dp"
+                app:cardBackgroundColor="#1E1E2C"
+                app:cardCornerRadius="16dp"
+                app:strokeWidth="0dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="🎯 หลอดแจ้งเตือนงบประมาณเดือนนี้"
+                            android:textColor="#FFFFFF"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvBudgetText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0.00 / 10,000 ฿ (0%)"
+                            android:textColor="#A0A0B2"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+
+                    <com.google.android.material.progressindicator.LinearProgressIndicator
+                        android:id="@+id/progressBudget"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        app:trackColor="#2C2C3E"
+                        app:indicatorColor="#81C784"
+                        app:trackCornerRadius="8dp"
+                        app:trackThickness="10dp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- การ์ด Donut Chart แสดงสัดส่วนรายจ่ายตามหมวดหมู่ -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginBottom="12dp"
+                app:cardBackgroundColor="#1E1E2C"
+                app:cardCornerRadius="16dp"
+                app:strokeWidth="0dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🍩 สัดส่วนรายจ่ายตามหมวดหมู่"
+                        android:textColor="#FFFFFF"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <com.github.mikephil.charting.charts.PieChart
+                        android:id="@+id/pieChartCategory"
+                        android:layout_width="match_parent"
+                        android:layout_height="220dp"
+                        android:layout_marginTop="8dp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- แถบเลือกโฟลเดอร์ & ปุ่มกดอัปเดตเดี๋ยวนี้ -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginBottom="12dp"
+                app:cardBackgroundColor="#1E1E2C"
+                app:cardCornerRadius="12dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="12dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <Button
+                            android:id="@+id/btnSelectFolder"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="📁 เลือกแฟ้มสลิปอัตโนมัติ"
+                            android:textColor="#FFFFFF"
+                            android:textSize="12sp" />
+
+                        <Button
+                            android:id="@+id/btnRefreshNow"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:backgroundTint="#2C2C3E"
+                            android:text="🔄 อัปเดต"
+                            android:textColor="#FFFFFF"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tvFolderPath"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="ยังไม่ได้เลือกแฟ้มตรวจอัตโนมัติ"
+                        android:textColor="#A0A0B2"
+                        android:textSize="11sp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- ช่องค้นหาและตัวกรอง -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingHorizontal="16dp">
+
+                <EditText
+                    android:id="@+id/etSearch"
+                    android:layout_width="match_parent"
+                    android:layout_height="44dp"
+                    android:background="@android:drawable/editbox_background"
+                    android:hint="🔍 ค้นหาผู้รับ ร้านค้า หรือหมวดหมู่..."
+                    android:paddingHorizontal="16dp"
+                    android:textColor="#FFFFFF"
+                    android:textColorHint="#757575"
+                    android:textSize="13sp" />
+
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/chipGroupFilter"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    app:singleSelection="true">
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipAll"
+                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checked="true"
+                        android:text="ทั้งหมด" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipExpense"
+                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🔴 รายจ่าย" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipIncome"
+                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🟢 รายรับ" />
+                </com.google.android.material.chip.ChipGroup>
+
+            </LinearLayout>
+
+            <!-- รายการประวัติ -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvHistory"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false"
+                android:paddingTop="4dp" />
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- ปุ่มสแกนสลิปแบบลอย (FAB) -->
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+        android:id="@+id/fabScan"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="20dp"
+        android:backgroundTint="#6200EE"
+        android:text="📷 สแกนสลิปโอนเงิน"
+        android:textColor="#FFFFFF"
+        app:iconTint="#FFFFFF" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
+EOF
+
+# 3. อัปเดต MainActivity.kt ผูกเหตุการณ์คลิกปุ่ม "อัปเดต"
+cat << 'EOF' > app/src/main/java/com/example/slipreader/MainActivity.kt
 package com.example.slipreader
 
 import android.content.Intent
@@ -362,3 +654,6 @@ class MainActivity : AppCompatActivity() {
         adapter.updateData(filteredList)
     }
 }
+EOF
+
+echo "✅ ไฟล์ถูกปรับเปลี่ยนเป็นปุ่มอัปเดตเดี๋ยวนี้เรียบร้อยแล้ว!"

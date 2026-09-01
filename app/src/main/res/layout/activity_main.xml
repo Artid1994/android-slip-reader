@@ -102,7 +102,7 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- แถบเลือกโฟลเดอร์ตรวจสลิปอัตโนมัติ -->
+            <!-- แถบเลือกโฟลเดอร์ & ปุ่มกดอัปเดตเดี๋ยวนี้ -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -133,12 +133,15 @@
                             android:textColor="#FFFFFF"
                             android:textSize="12sp" />
 
-                        <Spinner
-                            android:id="@+id/spInterval"
+                        <Button
+                            android:id="@+id/btnRefreshNow"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"
-                            android:background="#2C2C3E" />
+                            android:backgroundTint="#2C2C3E"
+                            android:text="🔄 อัปเดต"
+                            android:textColor="#FFFFFF"
+                            android:textSize="12sp" />
                     </LinearLayout>
 
                     <TextView
