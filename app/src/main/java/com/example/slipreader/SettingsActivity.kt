@@ -20,6 +20,7 @@ class SettingsActivity : AppCompatActivity() {
         etMonthlyBudget = findViewById(R.id.etMonthlyBudget)
         btnSaveSettings = findViewById(R.id.btnSaveSettings)
 
+        // โหลดค่างบประมาณที่บันทึกไว้
         etMonthlyBudget.setText(repository.getMonthlyBudget().toString())
 
         btnSaveSettings.setOnClickListener {
