@@ -58,18 +58,21 @@ class MainActivity : AppCompatActivity() {
     private val selectFolderLauncher = registerForActivityResult(
         ActivityResultContracts.OpenDocumentTree()
     ) { uri: Uri? ->
-        uri?.let {
-            contentResolver.takePersistableUriPermission(
-                it,
-                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-            )
-            repository.saveAutoFolderUri(it.toString())
-            tvFolderPath.text = "แฟ้ม: ${it.path}"
+        uri?.let { folderUri ->
+            val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            try {
+                contentResolver.takePersistableUriPermission(folderUri, takeFlags)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+
+            repository.saveAutoFolderUri(folderUri.toString())
+            tvFolderPath.text = "แฟ้ม: ${folderUri.path}"
             
             runImmediateScanWork()
             scheduleAutoScanWork()
             
-            Toast.makeText(this, "เริ่มสแกนสลิปในแฟ้มทันที...", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "กำลังสแกนรูปสลิปในแฟ้ม...", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -143,7 +146,6 @@ class MainActivity : AppCompatActivity() {
         updateUI()
     }
 
-    // สั่งสแกนทันทีและเฝ้าสังเกตการณ์ (Observe) เพื่ออัปเดตหน้าจอเมื่อสแกนเสร็จ
     private fun runImmediateScanWork() {
         val immediateWorkRequest = OneTimeWorkRequestBuilder<SlipAutoScanWorker>().build()
         val workManager = WorkManager.getInstance(applicationContext)
@@ -152,7 +154,7 @@ class MainActivity : AppCompatActivity() {
         
         workManager.getWorkInfoByIdLiveData(immediateWorkRequest.id)
             .observe(this) { workInfo ->
-                if (workInfo != null && workInfo.state == WorkInfo.State.SUCCEEDED) {
+                if (workInfo != null && (workInfo.state == WorkInfo.State.SUCCEEDED || workInfo.state == WorkInfo.State.FAILED)) {
                     updateUI()
                     Toast.makeText(this, "สแกนสลิปในแฟ้มเรียบร้อยแล้ว", Toast.LENGTH_SHORT).show()
                 }
