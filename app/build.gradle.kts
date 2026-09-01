@@ -11,8 +11,8 @@ android {
         applicationId = "com.example.slipreader"
         minSdk = 24
         targetSdk = 34
-        versionCode = 18
-        versionName = "1.0.0-beta1q"
+        versionCode = 19
+        versionName = "1.0.0-beta1r"
     }
 
     buildTypes {
