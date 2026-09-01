@@ -18,6 +18,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name="com.example.slipreader.SettingsActivity"
+            android:exported="false"
+            android:label="ตั้งค่าแอป" />
     </application>
 
 </manifest>

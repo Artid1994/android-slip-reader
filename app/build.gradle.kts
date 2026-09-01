@@ -11,8 +11,8 @@ android {
         applicationId = "com.example.slipreader"
         minSdk = 24
         targetSdk = 34
-        versionCode = 19
-        versionName = "1.0.0-beta1r"
+        versionCode = 20
+        versionName = "1.0.0-beta1s"
     }
 
     buildTypes {
@@ -37,13 +37,9 @@ dependencies {
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("com.google.android.material:material:1.11.0")
-
-    // Google ML Kit & Gson & WorkManager
     implementation("com.google.mlkit:text-recognition:16.0.0")
     implementation("com.google.code.gson:gson:2.10.1")
     implementation("androidx.work:work-runtime-ktx:2.9.0")
     implementation("androidx.documentfile:documentfile:1.0.1")
-
-    // MPAndroidChart
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
 }
