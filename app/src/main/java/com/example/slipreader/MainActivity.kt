@@ -1,21 +1,32 @@
 package com.example.slipreader
 
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.view.View
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
+import android.widget.Button
 import android.widget.EditText
+import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import com.google.android.material.chip.ChipGroup
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
+import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
 
@@ -24,6 +35,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvTotalIncome: TextView
     private lateinit var tvTotalExpense: TextView
     private lateinit var fabScan: ExtendedFloatingActionButton
+    private lateinit var btnSelectFolder: Button
+    private lateinit var tvFolderPath: TextView
+    private lateinit var spInterval: Spinner
     private lateinit var etSearch: EditText
     private lateinit var chipGroupFilter: ChipGroup
     private lateinit var rvHistory: RecyclerView
@@ -39,29 +53,74 @@ class MainActivity : AppCompatActivity() {
         uri?.let { processSlipImage(it) }
     }
 
+    // ตัวเลือกเปิดโฟลเดอร์สำหรับตรวจสลิปอัตโนมัติ
+    private val selectFolderLauncher = registerForActivityResult(
+        ActivityResultContracts.OpenDocumentTree()
+    ) { uri: Uri? ->
+        uri?.let {
+            contentResolver.takePersistableUriPermission(
+                it,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION
+            )
+            repository.saveAutoFolderUri(it.toString())
+            tvFolderPath.text = "แฟ้ม: ${it.path}"
+            scheduleAutoScanWork()
+            Toast.makeText(this, "ตั้งค่าแฟ้มตรวจสลิปเรียบร้อย", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         repository = TransactionRepository(this)
 
-        // Binding UI Elements
         tvHeaderDate = findViewById(R.id.tvHeaderDate)
         tvNetBalance = findViewById(R.id.tvNetBalance)
         tvTotalIncome = findViewById(R.id.tvTotalIncome)
         tvTotalExpense = findViewById(R.id.tvTotalExpense)
         fabScan = findViewById(R.id.fabScan)
+        btnSelectFolder = findViewById(R.id.btnSelectFolder)
+        tvFolderPath = findViewById(R.id.tvFolderPath)
+        spInterval = findViewById(R.id.spInterval)
         etSearch = findViewById(R.id.etSearch)
         chipGroupFilter = findViewById(R.id.chipGroupFilter)
         rvHistory = findViewById(R.id.rvHistory)
 
         fabScan.setOnClickListener { pickImageLauncher.launch("image/*") }
+        btnSelectFolder.setOnClickListener { selectFolderLauncher.launch(null) }
+
+        // แสดงพาธโฟลเดอร์เดิมถ้ามี
+        repository.getAutoFolderUri()?.let {
+            tvFolderPath.text = "แฟ้มที่เลือกไว้เรียบร้อย"
+        }
+
+        // ตั้งค่าตัวเลือกนาทีสำหรับตรวจจับอัตโนมัติ (15 นาที, 30 นาที, 60 นาที)
+        val intervals = arrayOf("ทุก 15 นาที", "ทุก 30 นาที", "ทุก 60 นาที")
+        val spinnerAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, intervals)
+        spInterval.adapter = spinnerAdapter
+
+        spInterval.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                val minutes = when (position) {
+                    1 -> 30
+                    2 -> 60
+                    else -> 15
+                }
+                repository.saveScanInterval(minutes)
+                scheduleAutoScanWork()
+            }
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
 
         rvHistory.layoutManager = LinearLayoutManager(this)
-        adapter = TransactionAdapter(emptyList())
+        
+        // เมื่อผู้ใช้กดที่การ์ดจะแสดง Dialog ให้ ลบ หรือ แก้ไข
+        adapter = TransactionAdapter(emptyList()) { record ->
+            showEditDeleteDialog(record)
+        }
         rvHistory.adapter = adapter
 
-        // ค้นหา
         etSearch.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
@@ -71,7 +130,6 @@ class MainActivity : AppCompatActivity() {
             override fun afterTextChanged(s: Editable?) {}
         })
 
-        // ตัวกรอง
         chipGroupFilter.setOnCheckedStateChangeListener { _, checkedIds ->
             currentFilterType = when (checkedIds.firstOrNull()) {
                 R.id.chipExpense -> "EXPENSE"
@@ -82,6 +140,69 @@ class MainActivity : AppCompatActivity() {
         }
 
         updateUI()
+    }
+
+    // ฟังก์ชันตั้งเวลาสแกนพื้นหลัง
+    private fun scheduleAutoScanWork() {
+        val minutes = repository.getScanInterval().toLong()
+        val workRequest = PeriodicWorkRequestBuilder<SlipAutoScanWorker>(minutes, TimeUnit.MINUTES).build()
+
+        WorkManager.getInstance(applicationContext).enqueueUniquePeriodicWork(
+            "SlipAutoScanWork",
+            ExistingPeriodicWorkPolicy.UPDATE,
+            workRequest
+        )
+    }
+
+    // แสดง Dialog กดลบ หรือ แก้ไขรายการ
+    private fun showEditDeleteDialog(record: TransactionRecord) {
+        val options = arrayOf("✏️ แก้ไขหมวดหมู่/ยอดเงิน", "🗑️ ลบรายการนี้")
+        AlertDialog.Builder(this)
+            .setTitle("${record.category} - ${record.amount} ฿")
+            .setItems(options) { _, which ->
+                if (which == 0) {
+                    showEditDialog(record)
+                } else {
+                    repository.deleteTransaction(record.id)
+                    Toast.makeText(this, "ลบรายการเรียบร้อย", Toast.LENGTH_SHORT).show()
+                    updateUI()
+                }
+            }
+            .show()
+    }
+
+    private fun showEditDialog(record: TransactionRecord) {
+        val layout = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setPadding(32, 16, 32, 16)
+        }
+
+        val etAmount = EditText(this).apply {
+            hint = "ยอดเงิน"
+            setText(record.amount.toString())
+        }
+        val etCategory = EditText(this).apply {
+            hint = "หมวดหมู่"
+            setText(record.category)
+        }
+
+        layout.addView(etAmount)
+        layout.addView(etCategory)
+
+        AlertDialog.Builder(this)
+            .setTitle("แก้ไขรายการ")
+            .setView(layout)
+            .setPositiveButton("บันทึก") { _, _ ->
+                val newAmount = etAmount.text.toString().toDoubleOrNull() ?: record.amount
+                val newCategory = etCategory.text.toString().ifEmpty { record.category }
+                val updatedRecord = record.copy(amount = newAmount, category = newCategory)
+                
+                repository.updateTransaction(updatedRecord)
+                Toast.makeText(this, "อัปเดตข้อมูลเรียบร้อย", Toast.LENGTH_SHORT).show()
+                updateUI()
+            }
+            .setNegativeButton("ยกเลิก", null)
+            .show()
     }
 
     private fun processSlipImage(imageUri: Uri) {

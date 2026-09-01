@@ -41,6 +41,10 @@ dependencies {
     // Google ML Kit Text Recognition
     implementation("com.google.mlkit:text-recognition:16.0.0")
 
-    // Gson สำหรับจัดเก็บโครงสร้างข้อมูลสลิปลง Local Storage
+    // Gson
     implementation("com.google.code.gson:gson:2.10.1")
+
+    // WorkManager สำหรับรันระบบสแกนสลิปอัตโนมัติตามรอบเวลา
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
+    implementation("androidx.documentfile:documentfile:1.0.1")
 }

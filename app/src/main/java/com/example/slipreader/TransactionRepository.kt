@@ -3,8 +3,6 @@ package com.example.slipreader
 import android.content.Context
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import java.io.File
-import java.io.FileWriter
 
 class TransactionRepository(val context: Context) {
 
@@ -21,6 +19,23 @@ class TransactionRepository(val context: Context) {
         currentList.add(0, record)
         saveList(currentList)
         return true
+    }
+
+    // ลบรายการประวัติ
+    fun deleteTransaction(id: Long) {
+        val currentList = getAllTransactions().toMutableList()
+        currentList.removeAll { it.id == id }
+        saveList(currentList)
+    }
+
+    // แก้ไขรายการประวัติ
+    fun updateTransaction(updatedRecord: TransactionRecord) {
+        val currentList = getAllTransactions().toMutableList()
+        val index = currentList.indexOfFirst { it.id == updatedRecord.id }
+        if (index != -1) {
+            currentList[index] = updatedRecord
+            saveList(currentList)
+        }
     }
 
     private fun isDuplicate(newRecord: TransactionRecord, existingList: List<TransactionRecord>): Boolean {
@@ -52,26 +67,22 @@ class TransactionRepository(val context: Context) {
         )
     }
 
-    // ฟังก์ชัน Export ข้อมูลประวัติเป็นไฟล์ CSV
-    fun exportToCSV(): File? {
-        val list = getAllTransactions()
-        if (list.isEmpty()) return null
+    // บันทึกและดึงพาธโฟลเดอร์สำหรับตรวจสลิปอัตโนมัติ
+    fun saveAutoFolderUri(uriStr: String) {
+        prefs.edit().putString("auto_folder_uri", uriStr).apply()
+    }
 
-        val csvFile = File(context.getExternalFilesDir(null), "slip_transactions.csv")
-        try {
-            val writer = FileWriter(csvFile)
-            writer.append("Date,Time,Type,Category,Amount,Bank,Receiver\n")
-            for (item in list) {
-                val typeStr = if (item.type == TransactionType.INCOME) "Income" else "Expense"
-                writer.append("${item.dateStr},${item.timeStr},$typeStr,${item.category},${item.amount},${item.bankName},\"${item.receiverName}\"\n")
-            }
-            writer.flush()
-            writer.close()
-            return csvFile
-        } catch (e: Exception) {
-            e.printStackTrace()
-            return null
-        }
+    fun getAutoFolderUri(): String? {
+        return prefs.getString("auto_folder_uri", null)
+    }
+
+    // บันทึกและดึงรอบเวลาสแกนสลิป (นาที)
+    fun saveScanInterval(minutes: Int) {
+        prefs.edit().putInt("scan_interval_minutes", minutes).apply()
+    }
+
+    fun getScanInterval(): Int {
+        return prefs.getInt("scan_interval_minutes", 15) // Default 15 นาที
     }
 
     private fun saveList(list: List<TransactionRecord>) {

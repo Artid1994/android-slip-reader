@@ -14,6 +14,57 @@
         <!-- สรุปยอด Card สไตล์โมเดิร์น -->
         <include layout="@layout/layout_summary_card" />
 
+        <!-- แถบตั้งค่าการตรวจสลิปอัตโนมัติ -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginBottom="8dp"
+            app:cardBackgroundColor="#1E1E2C"
+            app:cardCornerRadius="12dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="12dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <Button
+                        android:id="@+id/btnSelectFolder"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="📁 เลือกแฟ้มสลิปอัตโนมัติ"
+                        android:textColor="#FFFFFF"
+                        android:textSize="12sp" />
+
+                    <Spinner
+                        android:id="@+id/spInterval"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:background="#2C2C3E" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tvFolderPath"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="ยังไม่ได้เลือกแฟ้มตรวจอัตโนมัติ"
+                    android:textColor="#A0A0B2"
+                    android:textSize="11sp" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
         <!-- ช่องค้นหาและตัวกรอง -->
         <LinearLayout
             android:layout_width="match_parent"
@@ -24,19 +75,19 @@
             <EditText
                 android:id="@+id/etSearch"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
+                android:layout_height="44dp"
                 android:background="@android:drawable/editbox_background"
                 android:hint="🔍 ค้นหาผู้รับ ร้านค้า หรือหมวดหมู่..."
                 android:paddingHorizontal="16dp"
                 android:textColor="#FFFFFF"
                 android:textColorHint="#757575"
-                android:textSize="14sp" />
+                android:textSize="13sp" />
 
             <com.google.android.material.chip.ChipGroup
                 android:id="@+id/chipGroupFilter"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="4dp"
                 app:singleSelection="true">
 
                 <com.google.android.material.chip.Chip
@@ -71,18 +122,17 @@
             android:layout_height="0dp"
             android:layout_weight="1"
             android:clipToPadding="false"
-            android:paddingTop="8dp"
+            android:paddingTop="4dp"
             android:paddingBottom="80dp" />
 
     </LinearLayout>
 
-    <!-- ปุ่มสแกนลอยแบบโมเดิร์น (Extended FAB) -->
     <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
         android:id="@+id/fabScan"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|center_horizontal"
-        android:layout_marginBottom="24dp"
+        android:layout_marginBottom="20dp"
         android:backgroundTint="#6200EE"
         android:text="📷 สแกนสลิปโอนเงิน"
         android:textColor="#FFFFFF"
