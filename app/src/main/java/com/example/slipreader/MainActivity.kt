@@ -53,7 +53,6 @@ class MainActivity : AppCompatActivity() {
         uri?.let { processSlipImage(it) }
     }
 
-    // ตัวเลือกเปิดโฟลเดอร์สำหรับตรวจสลิปอัตโนมัติ
     private val selectFolderLauncher = registerForActivityResult(
         ActivityResultContracts.OpenDocumentTree()
     ) { uri: Uri? ->
@@ -90,12 +89,10 @@ class MainActivity : AppCompatActivity() {
         fabScan.setOnClickListener { pickImageLauncher.launch("image/*") }
         btnSelectFolder.setOnClickListener { selectFolderLauncher.launch(null) }
 
-        // แสดงพาธโฟลเดอร์เดิมถ้ามี
         repository.getAutoFolderUri()?.let {
             tvFolderPath.text = "แฟ้มที่เลือกไว้เรียบร้อย"
         }
 
-        // ตั้งค่าตัวเลือกนาทีสำหรับตรวจจับอัตโนมัติ (15 นาที, 30 นาที, 60 นาที)
         val intervals = arrayOf("ทุก 15 นาที", "ทุก 30 นาที", "ทุก 60 นาที")
         val spinnerAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, intervals)
         spInterval.adapter = spinnerAdapter
@@ -115,7 +112,6 @@ class MainActivity : AppCompatActivity() {
 
         rvHistory.layoutManager = LinearLayoutManager(this)
         
-        // เมื่อผู้ใช้กดที่การ์ดจะแสดง Dialog ให้ ลบ หรือ แก้ไข
         adapter = TransactionAdapter(emptyList()) { record ->
             showEditDeleteDialog(record)
         }
@@ -142,7 +138,6 @@ class MainActivity : AppCompatActivity() {
         updateUI()
     }
 
-    // ฟังก์ชันตั้งเวลาสแกนพื้นหลัง
     private fun scheduleAutoScanWork() {
         val minutes = repository.getScanInterval().toLong()
         val workRequest = PeriodicWorkRequestBuilder<SlipAutoScanWorker>(minutes, TimeUnit.MINUTES).build()
@@ -154,7 +149,6 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
-    // แสดง Dialog กดลบ หรือ แก้ไขรายการ
     private fun showEditDeleteDialog(record: TransactionRecord) {
         val options = arrayOf("✏️ แก้ไขหมวดหมู่/ยอดเงิน", "🗑️ ลบรายการนี้")
         AlertDialog.Builder(this)
