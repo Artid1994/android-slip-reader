@@ -1,3 +1,7 @@
+#!/bin/bash
+
+# 1. อัปเดต app/build.gradle.kts เป็น versionCode 14
+cat << 'EOF' > app/build.gradle.kts
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -47,3 +51,28 @@ dependencies {
     // MPAndroidChart
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
 }
+EOF
+
+# 2. ยืนยันการตั้งค่า settings.gradle.kts เรื่อง Repository
+cat << 'EOF' > settings.gradle.kts
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+        maven { url = java.net.URI("https://jitpack.io") }
+    }
+}
+
+rootProject.name = "SlipReader"
+include(":app")
+EOF
+
+echo "✅ ทำการเตรียมสคริปต์ตั้งค่า Build เรียบร้อยแล้ว!"
