@@ -3,27 +3,26 @@ package com.example.slipreader
 import android.content.Context
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import java.io.File
+import java.io.FileWriter
 
-class TransactionRepository(context: Context) {
+class TransactionRepository(val context: Context) {
 
     private val prefs = context.getSharedPreferences("slip_history_prefs", Context.MODE_PRIVATE)
     private val gson = Gson()
 
-    // บันทึกรายการใหม่ (คืนค่า true ถ้าบันทึกสำเร็จ, false ถ้าเป็นสลิปซ้ำ)
     fun saveTransaction(record: TransactionRecord): Boolean {
         val currentList = getAllTransactions().toMutableList()
 
-        // ตรวจสอบว่าสลิปนี้เคยถูกบันทึกไปแล้วหรือยัง (เช็ก วันที่ + เวลา + ยอดเงิน)
         if (isDuplicate(record, currentList)) {
-            return false // เป็นสลิปซ้ำ ไม่บันทึกเพิ่ม
+            return false
         }
 
-        currentList.add(0, record) // เพิ่มรายการล่าสุดไว้บนสุด
+        currentList.add(0, record)
         saveList(currentList)
         return true
     }
 
-    // ฟังก์ชันเช็กว่ามีรายการสลิปที่ ยอดเงิน, วันที่ และเวลา ตรงกันอยู่แล้วหรือไม่
     private fun isDuplicate(newRecord: TransactionRecord, existingList: List<TransactionRecord>): Boolean {
         return existingList.any { existing ->
             existing.amount == newRecord.amount &&
@@ -32,7 +31,6 @@ class TransactionRepository(context: Context) {
         }
     }
 
-    // ดึงรายการทั้งหมด จัดลำดับตาม Timestamp (ล่าสุดขึ้นก่อน)
     fun getAllTransactions(): List<TransactionRecord> {
         val json = prefs.getString("transactions_key", null) ?: return emptyList()
         val type = object : TypeToken<List<TransactionRecord>>() {}.type
@@ -40,7 +38,6 @@ class TransactionRepository(context: Context) {
         return list.sortedByDescending { it.timestamp }
     }
 
-    // คำนวณสรุปยอดประจำวัน
     fun getDailySummary(dateStr: String): DailySummary {
         val dailyList = getAllTransactions().filter { it.dateStr == dateStr }
         val totalIncome = dailyList.filter { it.type == TransactionType.INCOME }.sumOf { it.amount }
@@ -53,6 +50,28 @@ class TransactionRepository(context: Context) {
             netBalance = totalIncome - totalExpense,
             itemCount = dailyList.size
         )
+    }
+
+    // ฟังก์ชัน Export ข้อมูลประวัติเป็นไฟล์ CSV
+    fun exportToCSV(): File? {
+        val list = getAllTransactions()
+        if (list.isEmpty()) return null
+
+        val csvFile = File(context.getExternalFilesDir(null), "slip_transactions.csv")
+        try {
+            val writer = FileWriter(csvFile)
+            writer.append("Date,Time,Type,Category,Amount,Bank,Receiver\n")
+            for (item in list) {
+                val typeStr = if (item.type == TransactionType.INCOME) "Income" else "Expense"
+                writer.append("${item.dateStr},${item.timeStr},$typeStr,${item.category},${item.amount},${item.bankName},\"${item.receiverName}\"\n")
+            }
+            writer.flush()
+            writer.close()
+            return csvFile
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return null
+        }
     }
 
     private fun saveList(list: List<TransactionRecord>) {
