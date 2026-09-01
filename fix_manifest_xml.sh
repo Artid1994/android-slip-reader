@@ -1,3 +1,7 @@
+#!/bin/bash
+
+# 1. อัปเดต app/build.gradle.kts เป็น versionCode 17 (1.0.0-beta1p)
+cat << 'EOF' > app/build.gradle.kts
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -47,3 +51,33 @@ dependencies {
     // MPAndroidChart
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
 }
+EOF
+
+# 2. แก้ไข AndroidManifest.xml กำหนด android namespace ให้ถูกต้องสมบูรณ์
+cat << 'EOF' > app/src/main/AndroidManifest.xml
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+
+    <application
+        android:allowBackup="true"
+        android:label="SlipReader"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.MaterialComponents.DayNight.NoActionBar">
+        
+        <activity
+            android:name="com.example.slipreader.MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>
+EOF
+
+echo "✅ แก้ไขไฟล์ XML Namespace ใน AndroidManifest.xml เรียบร้อย!"
