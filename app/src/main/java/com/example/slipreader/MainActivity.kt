@@ -9,7 +9,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
-import com.google.mlkit.vision.text.thai.ThaiTextRecognizerOptions
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 
 class MainActivity : AppCompatActivity() {
 
@@ -49,7 +49,7 @@ class MainActivity : AppCompatActivity() {
     private fun processSlipImage(imageUri: Uri) {
         try {
             val image = InputImage.fromFilePath(this, imageUri)
-            val recognizer = TextRecognition.getClient(ThaiTextRecognizerOptions.Builder().build())
+            val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
 
             recognizer.process(image)
                 .addOnSuccessListener { visionText ->
