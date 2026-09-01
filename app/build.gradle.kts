@@ -11,8 +11,8 @@ android {
         applicationId = "com.example.slipreader"
         minSdk = 24
         targetSdk = 34
-        versionCode = 6
-        versionName = "1.0.0-beta1e"
+        versionCode = 8
+        versionName = "1.0.0-beta1g"
     }
 
     buildTypes {
@@ -33,18 +33,23 @@ android {
     }
 }
 
+repositories {
+    google()
+    mavenCentral()
+    maven { url = java.net.URI("https://jitpack.io") }
+}
+
 dependencies {
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("com.google.android.material:material:1.11.0")
 
-    // Google ML Kit Text Recognition
+    // Google ML Kit & Gson & WorkManager
     implementation("com.google.mlkit:text-recognition:16.0.0")
-
-    // Gson
     implementation("com.google.code.gson:gson:2.10.1")
-
-    // WorkManager & DocumentFile
     implementation("androidx.work:work-runtime-ktx:2.9.0")
     implementation("androidx.documentfile:documentfile:1.0.1")
+
+    // MPAndroidChart สำหรับแสดง Donut Chart
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
 }

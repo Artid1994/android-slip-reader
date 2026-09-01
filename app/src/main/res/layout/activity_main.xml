@@ -6,127 +6,214 @@
     android:layout_height="match_parent"
     android:background="#121212">
 
-    <LinearLayout
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:layout_height="match_parent">
 
-        <!-- สรุปยอด Card สไตล์โมเดิร์น -->
-        <include layout="@layout/layout_summary_card" />
-
-        <!-- แถบตั้งค่าการตรวจสลิปอัตโนมัติ -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="16dp"
-            android:layout_marginBottom="8dp"
-            app:cardBackgroundColor="#1E1E2C"
-            app:cardCornerRadius="12dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="12dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
-
-                    <Button
-                        android:id="@+id/btnSelectFolder"
-                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="📁 เลือกแฟ้มสลิปอัตโนมัติ"
-                        android:textColor="#FFFFFF"
-                        android:textSize="12sp" />
-
-                    <Spinner
-                        android:id="@+id/spInterval"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
-                        android:background="#2C2C3E" />
-                </LinearLayout>
-
-                <TextView
-                    android:id="@+id/tvFolderPath"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="ยังไม่ได้เลือกแฟ้มตรวจอัตโนมัติ"
-                    android:textColor="#A0A0B2"
-                    android:textSize="11sp" />
-
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- ช่องค้นหาและตัวกรอง -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingHorizontal="16dp">
+            android:paddingBottom="80dp">
 
-            <EditText
-                android:id="@+id/etSearch"
-                android:layout_width="match_parent"
-                android:layout_height="44dp"
-                android:background="@android:drawable/editbox_background"
-                android:hint="🔍 ค้นหาผู้รับ ร้านค้า หรือหมวดหมู่..."
-                android:paddingHorizontal="16dp"
-                android:textColor="#FFFFFF"
-                android:textColorHint="#757575"
-                android:textSize="13sp" />
+            <!-- การ์ดสรุปยอดเงินสุทธิ -->
+            <include layout="@layout/layout_summary_card" />
 
-            <com.google.android.material.chip.ChipGroup
-                android:id="@+id/chipGroupFilter"
+            <!-- การ์ด Budget Progress Bar -->
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                app:singleSelection="true">
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginBottom="12dp"
+                app:cardBackgroundColor="#1E1E2C"
+                app:cardCornerRadius="16dp"
+                app:strokeWidth="0dp">
 
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chipAll"
-                    style="@style/Widget.MaterialComponents.Chip.Choice"
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:checked="true"
-                    android:text="ทั้งหมด" />
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chipExpense"
-                    style="@style/Widget.MaterialComponents.Chip.Choice"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="🔴 รายจ่าย" />
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
 
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chipIncome"
-                    style="@style/Widget.MaterialComponents.Chip.Choice"
-                    android:layout_width="wrap_content"
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="🎯 หลอดแจ้งเตือนงบประมาณเดือนนี้"
+                            android:textColor="#FFFFFF"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvBudgetText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0.00 / 10,000 ฿ (0%)"
+                            android:textColor="#A0A0B2"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+
+                    <com.google.android.material.progressindicator.LinearProgressIndicator
+                        android:id="@+id/progressBudget"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        app:trackColor="#2C2C3E"
+                        app:indicatorColor="#81C784"
+                        app:trackCornerRadius="8dp"
+                        app:trackThickness="10dp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- การ์ด Donut Chart แสดงสัดส่วนรายจ่ายตามหมวดหมู่ -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginBottom="12dp"
+                app:cardBackgroundColor="#1E1E2C"
+                app:cardCornerRadius="16dp"
+                app:strokeWidth="0dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="🟢 รายรับ" />
-            </com.google.android.material.chip.ChipGroup>
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🍩 สัดส่วนรายจ่ายตามหมวดหมู่"
+                        android:textColor="#FFFFFF"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <com.github.mikephil.charting.charts.PieChart
+                        android:id="@+id/pieChartCategory"
+                        android:layout_width="match_parent"
+                        android:layout_height="220dp"
+                        android:layout_marginTop="8dp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- แถบเลือกโฟลเดอร์ตรวจสลิปอัตโนมัติ -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginBottom="12dp"
+                app:cardBackgroundColor="#1E1E2C"
+                app:cardCornerRadius="12dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="12dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <Button
+                            android:id="@+id/btnSelectFolder"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="📁 เลือกแฟ้มสลิปอัตโนมัติ"
+                            android:textColor="#FFFFFF"
+                            android:textSize="12sp" />
+
+                        <Spinner
+                            android:id="@+id/spInterval"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:background="#2C2C3E" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tvFolderPath"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="ยังไม่ได้เลือกแฟ้มตรวจอัตโนมัติ"
+                        android:textColor="#A0A0B2"
+                        android:textSize="11sp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- ช่องค้นหาและตัวกรอง -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingHorizontal="16dp">
+
+                <EditText
+                    android:id="@+id/etSearch"
+                    android:layout_width="match_parent"
+                    android:layout_height="44dp"
+                    android:background="@android:drawable/editbox_background"
+                    android:hint="🔍 ค้นหาผู้รับ ร้านค้า หรือหมวดหมู่..."
+                    android:paddingHorizontal="16dp"
+                    android:textColor="#FFFFFF"
+                    android:textColorHint="#757575"
+                    android:textSize="13sp" />
+
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/chipGroupFilter"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    app:singleSelection="true">
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipAll"
+                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checked="true"
+                        android:text="ทั้งหมด" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipExpense"
+                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🔴 รายจ่าย" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipIncome"
+                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🟢 รายรับ" />
+                </com.google.android.material.chip.ChipGroup>
+
+            </LinearLayout>
+
+            <!-- รายการประวัติ -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvHistory"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false"
+                android:paddingTop="4dp" />
 
         </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
 
-        <!-- รายการประวัติ -->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvHistory"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:clipToPadding="false"
-            android:paddingTop="4dp"
-            android:paddingBottom="80dp" />
-
-    </LinearLayout>
-
+    <!-- ปุ่มสแกนสลิปแบบลอย (FAB) -->
     <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
         android:id="@+id/fabScan"
         android:layout_width="wrap_content"
