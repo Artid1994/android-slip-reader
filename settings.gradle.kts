@@ -10,8 +10,9 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven { url = java.net.URI("https://jitpack.io") }
     }
 }
 
-rootProject.name = "android-slip-reader"
+rootProject.name = "SlipReader"
 include(":app")

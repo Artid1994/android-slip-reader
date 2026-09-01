@@ -1,3 +1,29 @@
+#!/bin/bash
+
+# 1. อัปเดต settings.gradle.kts ใส่ JitPack Repository
+cat << 'EOF' > settings.gradle.kts
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+        maven { url = java.net.URI("https://jitpack.io") }
+    }
+}
+
+rootProject.name = "SlipReader"
+include(":app")
+EOF
+
+# 2. อัปเดต app/build.gradle.kts เป็นเวอร์ชัน 1.0.0-beta1h (versionCode 9)
+cat << 'EOF' > app/build.gradle.kts
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -47,3 +73,6 @@ dependencies {
     // MPAndroidChart
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
 }
+EOF
+
+echo "✅ ไฟล์ถูกอัปเดตเรียบร้อยแล้ว!"
