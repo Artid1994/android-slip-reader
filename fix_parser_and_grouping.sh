@@ -1,3 +1,58 @@
+#!/bin/bash
+
+# 1. อัปเดต app/build.gradle.kts เป็น versionCode 21 (1.0.0-beta1t)
+cat << 'EOF' > app/build.gradle.kts
+plugins {
+    id("com.android.application")
+    id("org.jetbrains.kotlin.android")
+}
+
+android {
+    namespace = "com.example.slipreader"
+    compileSdk = 34
+
+    defaultConfig {
+        applicationId = "com.example.slipreader"
+        minSdk = 24
+        targetSdk = 34
+        versionCode = 21
+        versionName = "1.0.0-beta1t"
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+}
+
+dependencies {
+    implementation("androidx.core:core-ktx:1.12.0")
+    implementation("androidx.appcompat:appcompat:1.6.1")
+    implementation("com.google.android.material:material:1.11.0")
+
+    // Google ML Kit Text Recognition
+    implementation("com.google.mlkit:text-recognition:16.0.0")
+    implementation("com.google.code.gson:gson:2.10.1")
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
+    implementation("androidx.documentfile:documentfile:1.0.1")
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+}
+EOF
+
+# 2. ปรับปรุง SlipParser.kt ให้แกะชื่อผู้รับ/ผู้ส่ง ภาษาไทยและสลิปทุกธนาคารได้อย่างแม่นยำ
+cat << 'EOF' > app/src/main/java/com/example/slipreader/SlipParser.kt
 package com.example.slipreader
 
 import java.text.SimpleDateFormat
@@ -87,3 +142,6 @@ object SlipParser {
         )
     }
 }
+EOF
+
+echo "✅ ปรับปรุงการสกัดชื่อผู้รับและอัปเดตสคริปต์สำเร็จแล้ว!"
