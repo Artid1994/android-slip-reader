@@ -54,7 +54,17 @@ class MainActivity : AppCompatActivity() {
             recognizer.process(image)
                 .addOnSuccessListener { visionText ->
                     val rawText = visionText.text
-                    tvResult.text = "ข้อความที่พบในสลิป:\n\n$rawText"
+                    val parsedData = SlipParser.parse(rawText)
+
+                    tvResult.text = """
+                        === ข้อมูลสลิปที่แกะได้ ===
+                        💰 ยอดเงิน: ${parsedData.amount ?: "ไม่ระบุ"} บาท
+                        📅 วันที่: ${parsedData.date ?: "ไม่ระบุ"}
+                        ⏰ เวลา: ${parsedData.time ?: "ไม่ระบุ"}
+                        
+                        --- ข้อความดิบทั้งหมด ---
+                        $rawText
+                    """.trimIndent()
                 }
                 .addOnFailureListener { e ->
                     Toast.makeText(this, "อ่านสลิปไม่สำเร็จ: ${e.message}", Toast.LENGTH_SHORT).show()
