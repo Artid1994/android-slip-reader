@@ -38,6 +38,6 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("com.google.android.material:material:1.11.0")
 
-    // Google ML Kit Text Recognition (รองรับภาษาไทย)
-    implementation("com.google.mlkit:text-recognition-thai:16.0.0-beta1")
+    // Google ML Kit Text Recognition ภาษาไทย (เวอร์ชันถูกต้อง)
+    implementation("com.google.mlkit:text-recognition-thai:16.0.0")
 }
